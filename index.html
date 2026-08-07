@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>わが家の光熱費ダッシュボード</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+
+  <!-- ============================================================
+       ヘッダー：ナビゲーションはcategories.jsonを元にJSで動的追加する
+       将来カテゴリが増えてもこのHTML自体は変更不要
+  ============================================================= -->
+  <header class="site-header">
+    <p class="site-title">わが家の光熱費ダッシュボード</p>
+    <nav class="site-nav">
+      <a href="index.html" class="is-active">ホーム</a>
+      <a href="register/electricity.html">電気代登録</a>
+      <a href="register/water.html">水道代登録</a>
+      <!-- 将来のカテゴリ追加分のリンクは home.js が動的に挿入する -->
+    </nav>
+  </header>
+
+  <main class="page-container">
+
+    <!-- ============================================================
+         サマリーカード：今月の各カテゴリ・合計・年間累計
+         中身は home.js が categories.json + 各CSVから動的に生成する
+    ============================================================= -->
+    <section aria-label="今月のサマリー">
+      <div id="summary-cards" class="card-grid">
+        <!-- home.js がここに .summary-card を動的挿入 -->
+        <p class="loading-placeholder">読み込み中...</p>
+      </div>
+      <p id="last-updated" class="last-updated-text"></p>
+    </section>
+
+    <!-- ============================================================
+         月別推移グラフ：カテゴリ複数選択＋期間フィルタ
+    ============================================================= -->
+    <section class="chart-panel" aria-labelledby="monthly-trend-heading">
+      <h2 id="monthly-trend-heading">月別推移</h2>
+
+      <!-- カテゴリ選択チップ：categories.jsonから動的生成、デフォルト全選択 -->
+      <div class="category-select-row">
+        <div id="category-checkboxes" class="category-checkboxes">
+          <!-- home.js が <label><input type="checkbox">カテゴリ名</label> を動的挿入 -->
+        </div>
+        <button type="button" id="toggle-all-categories" class="link-button">すべて解除</button>
+      </div>
+      <p id="usage-hidden-note" class="hint-text" hidden>
+        2項目以上選択中は合計金額のみ表示します（使用量は単位が異なるため非表示）
+      </p>
+
+      <!-- 期間フィルタ -->
+      <div class="period-filter-row">
+        <div class="filter-preset-buttons" role="group" aria-label="期間プリセット">
+          <button type="button" class="filter-preset" data-preset="6m">直近6ヶ月</button>
+          <button type="button" class="filter-preset is-active" data-preset="12m">直近12ヶ月</button>
+          <button type="button" class="filter-preset" data-preset="this-year">今年</button>
+          <button type="button" class="filter-preset" data-preset="all">全期間</button>
+        </div>
+        <div class="filter-custom-range">
+          <label for="filter-year-select">年で絞り込み</label>
+          <select id="filter-year-select">
+            <option value="">指定なし</option>
+            <!-- home.js がCSVに存在する年一覧を動的挿入 -->
+          </select>
+          <span class="filter-divider">または</span>
+          <label for="filter-start-month">開始</label>
+          <select id="filter-start-month"></select>
+          <label for="filter-end-month">終了</label>
+          <select id="filter-end-month"></select>
+        </div>
+      </div>
+
+      <canvas id="monthly-trend-chart" role="img" aria-label="月別推移グラフ"></canvas>
+    </section>
+
+    <!-- ============================================================
+         年間累計グラフ
+    ============================================================= -->
+    <section class="chart-panel" aria-labelledby="yearly-total-heading">
+      <h2 id="yearly-total-heading">年間累計</h2>
+      <div class="filter-custom-range">
+        <label for="yearly-total-range">表示年数</label>
+        <select id="yearly-total-range">
+          <option value="3">直近3年</option>
+          <option value="5" selected>直近5年</option>
+          <option value="all">全期間</option>
+        </select>
+      </div>
+      <canvas id="yearly-total-chart" role="img" aria-label="年間累計グラフ"></canvas>
+    </section>
+
+    <!-- ============================================================
+         前年同月比較グラフ
+    ============================================================= -->
+    <section class="chart-panel" aria-labelledby="yoy-heading">
+      <h2 id="yoy-heading">前年同月比較</h2>
+      <div class="filter-custom-range">
+        <label for="yoy-target-month">対象月</label>
+        <select id="yoy-target-month">
+          <!-- home.js が「今月」をデフォルト選択した状態で月一覧を動的挿入 -->
+        </select>
+      </div>
+      <canvas id="yoy-chart" role="img" aria-label="前年同月比較グラフ"></canvas>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>データはすべて<a href="https://github.com" target="_blank" rel="noopener">GitHub</a>上のCSVで管理されています。</p>
+  </footer>
+
+  <!-- Chart.js（CDN） -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+  <!-- 共通ライブラリ（表示層・入力層の両方から使う） -->
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/lib/nav.js"></script>
+  <script src="assets/js/lib/csv.js"></script>
+  <script src="assets/js/lib/aggregate.js"></script>
+  <script src="assets/js/lib/github-api.js"></script>
+
+  <!-- 表示層専用ロジック -->
+  <script src="assets/js/display/charts.js"></script>
+  <script src="assets/js/display/home.js"></script>
+
+</body>
+</html>

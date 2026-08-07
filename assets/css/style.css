@@ -1,0 +1,535 @@
+/* ============================================================
+   わが家の光熱費ダッシュボード - 共通スタイル
+   設計方針：
+   - 白ベース＋青アクセント、カード型UI
+   - PC優先レイアウト、768px未満をスマホ向けに調整
+   - 色・余白・角丸はCSS変数に集約し、後からのトーン変更を1箇所で完結させる
+   ============================================================= */
+
+:root {
+  /* --- カラートークン --- */
+  --color-bg-page: #F6F7FA;         /* ページ全体の背景（ごく薄いグレー） */
+  --color-bg-surface: #FFFFFF;      /* カード・パネルの背景（白） */
+  --color-bg-surface-muted: #F0F3F9;/* チップやボタン非選択時の背景 */
+
+  --color-accent: #2F6FED;          /* アクセントの青（電気代カラーと統一） */
+  --color-accent-bg: #EAF1FE;       /* アクセントの薄い背景（選択中チップ等） */
+  --color-accent-border: #B9D2FB;
+
+  --color-text-primary: #1B2333;
+  --color-text-secondary: #5B6472;
+  --color-text-muted: #8A93A3;
+
+  --color-border: #E3E7EF;
+  --color-warning-bg: #FFF6E5;
+  --color-warning-text: #96660A;
+  --color-error-bg: #FDEEEE;
+  --color-error-text: #C23B3B;
+
+  /* --- カテゴリカラー（categories.jsonの値と対応） --- */
+  --color-electricity: #2F6FED;
+  --color-water: #22B8CF;
+
+  /* --- レイアウト・形状トークン --- */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --shadow-card: 0 1px 2px rgba(20, 30, 50, 0.04), 0 1px 8px rgba(20, 30, 50, 0.04);
+
+  --max-width-page: 1080px;
+  --max-width-page-narrow: 640px;
+
+  /* --- タイポグラフィ ---
+     外部フォントを読み込まず、環境依存の追加リクエストを増やさない方針。
+     数値表示にはタブular-numsを効かせ、桁が揺れても見やすくする。 */
+  --font-body: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", sans-serif;
+}
+
+/* ============================================================
+   リセット・基本設定
+============================================================= */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background: var(--color-bg-page);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  margin: 0 0 0.5em;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.125rem; }
+
+a {
+  color: var(--color-accent);
+}
+
+/* キーボード操作時のフォーカスを明示（アクセシビリティ） */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   ヘッダー・ナビゲーション
+============================================================= */
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.site-title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.site-nav {
+  display: flex;
+  gap: 1.25rem;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.site-nav a {
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px; /* タップ領域確保。下線はテキストに沿わせるため内側で表現 */
+  padding: 0 0.1rem;
+  border-bottom: 2px solid transparent;
+}
+
+.site-nav a.is-active,
+.site-nav a:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+/* ============================================================
+   ページ全体のレイアウト
+============================================================= */
+.page-container {
+  max-width: var(--max-width-page);
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-container--narrow {
+  max-width: var(--max-width-page-narrow);
+}
+
+.page-description {
+  color: var(--color-text-secondary);
+  margin: -0.5rem 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.site-footer {
+  max-width: var(--max-width-page);
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/* ============================================================
+   サマリーカード（ホーム画面）
+============================================================= */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+}
+
+.summary-card {
+  background: var(--color-bg-surface);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: 1rem 1.1rem;
+  border-left: 3px solid var(--color-border);
+}
+
+.summary-card[data-accent="electricity"] { border-left-color: var(--color-electricity); }
+.summary-card[data-accent="water"] { border-left-color: var(--color-water); }
+
+.summary-card__label {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.summary-card__value {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.loading-placeholder {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.last-updated-text {
+  margin: 0.6rem 0 0;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   グラフパネル共通
+============================================================= */
+.chart-panel {
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 1.1rem 1.25rem 1.4rem;
+}
+
+.chart-panel canvas {
+  max-height: 320px;
+}
+
+.hint-text {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin: 0 0 0.75rem;
+}
+
+/* --- カテゴリ複数選択チップ --- */
+.category-select-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.category-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.category-checkboxes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-surface-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.category-checkboxes input {
+  margin: 0;
+  width: 13px;
+  height: 13px;
+  accent-color: var(--color-accent);
+}
+
+/* チェック済みチップの見た目はJS側でこのクラスを付け替えて切り替える */
+.category-checkboxes label.is-selected {
+  background: var(--color-accent-bg);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+/* --- 期間フィルタ --- */
+.period-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: 0.9rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.filter-preset-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.filter-preset {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.filter-preset.is-active {
+  background: var(--color-accent-bg);
+  border-color: var(--color-accent-border);
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.filter-custom-range {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.filter-custom-range select {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-surface);
+}
+
+.filter-divider {
+  color: var(--color-text-muted);
+}
+
+/* ============================================================
+   フォーム（電気代・水道代登録画面 共通）
+============================================================= */
+.input-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.required-mark {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-accent);
+  background: var(--color-accent-bg);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  font: inherit;
+  /* 16px未満だとiOS Safariが入力欄タップ時に自動ズームしてしまうため、
+     remではなくpxで16px以上を明示的に固定する（スマホ入力を最優先） */
+  font-size: 16px;
+  padding: 0.7rem 0.75rem;
+  min-height: 44px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+}
+
+.form-group textarea {
+  min-height: 88px;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-error,
+.form-warning {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-control);
+  font-size: 0.85rem;
+}
+
+.form-error {
+  background: var(--color-error-bg);
+  color: var(--color-error-text);
+}
+
+.form-warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.button {
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.6rem 1.3rem;
+  min-height: 44px; /* 指でタップしやすい最小サイズの目安を確保 */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.button--primary {
+  background: var(--color-accent);
+  color: #FFFFFF;
+}
+
+.button--primary:disabled {
+  background: var(--color-bg-surface-muted);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.button--secondary {
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+.submit-status {
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+
+/* ============================================================
+   水道代登録画面（OCRステップ）
+============================================================= */
+.ocr-step + .ocr-step {
+  margin-top: 1.5rem;
+}
+
+.receipt-preview {
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--color-border);
+  margin-top: 0.75rem;
+}
+
+/* ============================================================
+   レスポンシブ：768px未満をスマホ向けレイアウトに調整
+============================================================= */
+@media (max-width: 767px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .site-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .page-container,
+  .site-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .category-select-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* 登録・撮り直しボタンは横並びだと押し間違えやすいため、
+     スマホでは縦積み・フル幅にして親指で押しやすくする */
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+  }
+
+  .form-actions .button {
+    width: 100%;
+  }
+
+  .submit-status {
+    text-align: center;
+  }
+
+  /* フィルタボタン・カテゴリチップも指でのタップを想定してひとまわり拡大 */
+  .filter-preset {
+    padding: 0.5rem 0.85rem;
+    min-height: 40px;
+  }
+
+  .category-checkboxes label {
+    padding: 0.5rem 0.85rem;
+    min-height: 40px;
+  }
+
+  .category-checkboxes input {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .card-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.6rem;
+  }
+
+  .summary-card__value {
+    font-size: 1.25rem;
+  }
+}

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "electricity",
+    "label": "電気代",
+    "csv": "data/electricity.csv",
+    "unit": "kWh",
+    "hasUsage": true,
+    "color": "#2F6FED",
+    "order": 1
+  },
+  {
+    "id": "water",
+    "label": "水道代",
+    "csv": "data/water.csv",
+    "unit": "m3",
+    "hasUsage": true,
+    "color": "#22B8CF",
+    "order": 2
+  },
+  {
+    "id": "gas",
+    "label": "ガス代",
+    "csv": "data/gas.csv",
+    "unit": "m3",
+    "hasUsage": true,
+    "color": "#E8862E",
+    "order": 3
+  }
+]

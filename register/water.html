@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>水道代登録 | わが家の光熱費ダッシュボード</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <p class="site-title">わが家の光熱費ダッシュボード</p>
+    <nav class="site-nav">
+      <a href="../index.html">ホーム</a>
+      <a href="electricity.html">電気代登録</a>
+      <a href="water.html" class="is-active">水道代登録</a>
+    </nav>
+  </header>
+
+  <main class="page-container page-container--narrow">
+
+    <h1>水道代を登録</h1>
+
+    <!-- ============================================================
+         STEP A: 領収書の撮影・選択
+    ============================================================= -->
+    <section id="step-upload" class="ocr-step">
+      <p class="page-description">水道代の領収書を撮影するか、画像を選択してください。</p>
+
+      <div class="form-group">
+        <label for="receipt-image">領収書の画像</label>
+        <input type="file" id="receipt-image" name="receiptImage" accept="image/*" capture="environment" />
+      </div>
+
+      <img id="receipt-preview" class="receipt-preview" alt="選択した領収書のプレビュー" hidden />
+
+      <p id="upload-error" class="form-error" role="alert" hidden></p>
+
+      <div class="form-actions">
+        <button type="button" id="run-ocr-button" class="button button--primary" disabled>OCRで読み取る</button>
+        <span id="ocr-status" class="submit-status" role="status" aria-live="polite"></span>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         STEP B: OCR結果の確認・修正
+         water-ocr.js が Apps Script からの結果を各inputへ反映する
+         （フィールド構成は register/electricity.html と同一。
+           登録処理も同じ csv.js / github-api.js を共用する）
+    ============================================================= -->
+    <section id="step-confirm" class="ocr-step" hidden>
+      <p class="page-description">読み取り結果を確認し、誤りがあれば修正してから登録してください。</p>
+
+      <form id="water-form" class="input-form" novalidate>
+
+        <div class="form-group">
+          <label for="water-year-month">対象年月<span class="required-mark">必須</span></label>
+          <input type="month" id="water-year-month" name="yearMonth" required />
+        </div>
+
+        <div class="form-group">
+          <label for="water-amount">請求額（円）<span class="required-mark">必須</span></label>
+          <input type="number" id="water-amount" name="amount" min="0" step="1" inputmode="numeric" required />
+        </div>
+
+        <div class="form-group">
+          <label for="water-usage">使用量（m&sup3;）</label>
+          <input type="number" id="water-usage" name="usage" min="0" step="0.1" inputmode="decimal" />
+        </div>
+
+        <div class="form-group">
+          <label for="water-memo">備考</label>
+          <textarea id="water-memo" name="memo" rows="3" placeholder="OCRの読み取りが不安な場合はメモしておくと安心です"></textarea>
+        </div>
+
+        <p id="water-ocr-note" class="hint-text">
+          <!-- water-ocr.js が「OCRで自動入力しました。内容をご確認ください」等を挿入 -->
+        </p>
+
+        <p id="water-form-error" class="form-error" role="alert" hidden></p>
+        <p id="water-overwrite-warning" class="form-warning" role="status" hidden>
+          同じ年月のデータが既に登録されています。登録すると上書きされます。
+        </p>
+
+        <div class="form-actions">
+          <button type="button" id="back-to-upload-button" class="button button--secondary">撮り直す</button>
+          <button type="submit" id="water-submit-button" class="button button--primary">登録</button>
+          <span id="water-submit-status" class="submit-status" role="status" aria-live="polite"></span>
+        </div>
+
+      </form>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>データはすべて<a href="https://github.com" target="_blank" rel="noopener">GitHub</a>上のCSVで管理されています。</p>
+  </footer>
+
+  <script src="../assets/js/config.js"></script>
+  <script src="../assets/js/lib/nav.js"></script>
+  <script src="../assets/js/lib/csv.js"></script>
+  <script src="../assets/js/lib/github-api.js"></script>
+  <script src="../assets/js/input/water-ocr.js"></script>
+
+</body>
+</html>
