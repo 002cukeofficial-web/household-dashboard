@@ -21,7 +21,7 @@ window.AppConfig = {
 
   // --- GitHubリポジトリ情報 ---
   // TODO: 実際に使うリポジトリのオーナー名・リポジトリ名に書き換えてください
-  GITHUB_OWNER: "your-github-username",
+  GITHUB_OWNER: "002cukeofficial-web",
   GITHUB_REPO: "household-dashboard",
   GITHUB_BRANCH: "main",
 
