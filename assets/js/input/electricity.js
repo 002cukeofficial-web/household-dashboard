@@ -122,7 +122,9 @@
       updateOverwriteWarning();
     } catch (error) {
       console.error("登録に失敗しました:", error);
-      showError("登録に失敗しました。通信環境を確認して、もう一度お試しください。");
+      showError(
+        `登録に失敗しました: ${error.message || "原因不明のエラーです。"}`
+      );
       submitStatus.textContent = "";
     } finally {
       submitButton.disabled = false;

@@ -340,7 +340,7 @@
       updateOverwriteWarning();
     } catch (error) {
       console.error("登録に失敗しました:", error);
-      formError.textContent = "登録に失敗しました。通信環境を確認して、もう一度お試しください。";
+      formError.textContent = `登録に失敗しました: ${error.message || "原因不明のエラーです。"}`;
       formError.hidden = false;
       submitStatus.textContent = "";
     } finally {
