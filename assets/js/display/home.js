@@ -26,6 +26,7 @@
   // ===========================================================
 
   async function init() {
+    // --- ① データ読み込み・サマリーカード（グラフ描画より重要度が高い部分） ---
     try {
       const categories = await window.AppConfig.loadCategories();
 
@@ -40,7 +41,19 @@
 
       renderSummaryCards();
       renderLastUpdated();
+    } catch (error) {
+      console.error("データの読み込みに失敗しました:", error);
+      const container = document.getElementById("summary-cards");
+      if (container) {
+        container.innerHTML =
+          '<p class="form-error">データの読み込みに失敗しました。しばらくしてから再度お試しください。</p>';
+      }
+      return; // カテゴリ・CSVすら読み込めていない場合は、この先のグラフ処理も意味が無いため中断
+    }
 
+    // --- ② グラフ描画（Chart.jsのCDN読み込み失敗など、①とは別の理由で失敗しうる部分） ---
+    // ①が成功していれば、こちらが失敗してもサマリーカードの表示は保たれる。
+    try {
       setupCategoryCheckboxes();
       setupPeriodFilter();
       renderMonthlyTrendChart();
@@ -51,12 +64,15 @@
       setupYoyControl();
       renderYoyChart();
     } catch (error) {
-      console.error("ホーム画面の初期化に失敗しました:", error);
-      const container = document.getElementById("summary-cards");
-      if (container) {
-        container.innerHTML =
-          '<p class="form-error">データの読み込みに失敗しました。しばらくしてから再度お試しください。</p>';
-      }
+      console.error("グラフの描画に失敗しました:", error);
+      document.querySelectorAll(".chart-panel").forEach((panel) => {
+        if (!panel.querySelector(".form-error")) {
+          const message = document.createElement("p");
+          message.className = "form-error";
+          message.textContent = "グラフの描画に失敗しました。しばらくしてから再度お試しください。";
+          panel.appendChild(message);
+        }
+      });
     }
   }
 
