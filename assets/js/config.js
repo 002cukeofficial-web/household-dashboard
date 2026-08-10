@@ -21,7 +21,7 @@ window.AppConfig = {
 
   // --- GitHubリポジトリ情報 ---
   // TODO: 実際に使うリポジトリのオーナー名・リポジトリ名に書き換えてください
-  GITHUB_OWNER: "002cukeofficial-web",
+  GITHUB_OWNER: "your-github-username",
   GITHUB_REPO: "household-dashboard",
   GITHUB_BRANCH: "main",
 
@@ -37,7 +37,8 @@ window.AppConfig = {
    * @returns {Promise<Array<{id:string, label:string, csv:string, unit:string, hasUsage:boolean, color:string, order:number}>>}
    */
   async loadCategories() {
-    const response = await fetch(this.CATEGORIES_FILE, { cache: "no-store" });
+    const cacheBustedUrl = `${this.CATEGORIES_FILE}?t=${Date.now()}`;
+    const response = await fetch(cacheBustedUrl, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(
         `カテゴリ情報の取得に失敗しました（${this.CATEGORIES_FILE}, status: ${response.status}）`
