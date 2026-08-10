@@ -45,9 +45,26 @@
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   }
 
-  function updateOverwriteWarning() {
-    const exists = existingRecords.some((r) => r.yearMonth === yearMonthInput.value);
-    overwriteWarning.hidden = !exists;
+  /**
+   * 選択中の年月に既存データがあれば、請求額・使用量・備考へ読み込んで表示する。
+   * 未登録の年月に切り替えた場合は入力欄を空に戻す。
+   */
+  function syncFormWithExistingRecord() {
+    const existing = existingRecords.find((r) => r.yearMonth === yearMonthInput.value);
+
+    overwriteWarning.hidden = !existing;
+
+    if (existing) {
+      overwriteWarning.textContent =
+        "この年月は既に登録されています。現在の登録内容を表示しています。登録すると上書きされます。";
+      amountInput.value = existing.amount;
+      usageInput.value = existing.usage === null || existing.usage === undefined ? "" : existing.usage;
+      memoInput.value = existing.memo || "";
+    } else {
+      amountInput.value = "";
+      usageInput.value = "";
+      memoInput.value = "";
+    }
   }
 
   async function init() {
@@ -98,9 +115,9 @@
       console.warn("既存データの取得に失敗しました（初回登録の場合は正常です）:", error);
       existingRecords = [];
     }
-    updateOverwriteWarning();
+    syncFormWithExistingRecord();
 
-    yearMonthInput.addEventListener("change", updateOverwriteWarning);
+    yearMonthInput.addEventListener("change", syncFormWithExistingRecord);
     form.addEventListener("submit", handleSubmit);
   }
 
@@ -151,7 +168,8 @@
         ? "（確認用）入力内容は正しく処理されました。"
         : "登録しました。";
       existingRecords = updatedRecords;
-      updateOverwriteWarning();
+      // 登録直後は自分自身と一致して警告が出てしまうため、単純に隠す
+      overwriteWarning.hidden = true;
     } catch (error) {
       console.error("登録に失敗しました:", error);
       formError.textContent = `登録に失敗しました: ${error.message || "原因不明のエラーです。"}`;

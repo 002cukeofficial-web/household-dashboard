@@ -62,10 +62,28 @@
     return null;
   }
 
-  /** 選択中の年月が既存データと重複しているかどうかで警告表示を切り替える */
-  function updateOverwriteWarning() {
-    const exists = existingRecords.some((r) => r.yearMonth === yearMonthInput.value);
-    overwriteWarning.hidden = !exists;
+  /**
+   * 選択中の年月に既存データがあれば、請求額・使用量・備考へ読み込んで表示する。
+   * これにより、登録画面を開いた・年月を変更しただけで「その月は登録済みかどうか」
+   * 「登録済みなら何円だったか」がグラフ画面に戻らなくても確認できる。
+   * 既存データが無い年月に切り替えた場合は、入力欄を空に戻す。
+   */
+  function syncFormWithExistingRecord() {
+    const existing = existingRecords.find((r) => r.yearMonth === yearMonthInput.value);
+
+    overwriteWarning.hidden = !existing;
+
+    if (existing) {
+      overwriteWarning.textContent =
+        "この年月は既に登録されています。現在の登録内容を表示しています。登録すると上書きされます。";
+      amountInput.value = existing.amount;
+      usageInput.value = existing.usage === null || existing.usage === undefined ? "" : existing.usage;
+      memoInput.value = existing.memo || "";
+    } else {
+      amountInput.value = "";
+      usageInput.value = "";
+      memoInput.value = "";
+    }
   }
 
   async function loadExistingRecords() {
@@ -77,7 +95,7 @@
       console.warn("既存データの取得に失敗しました（初回登録の場合は正常です）:", error);
       existingRecords = [];
     }
-    updateOverwriteWarning();
+    syncFormWithExistingRecord();
   }
 
   async function handleSubmit(event) {
@@ -119,7 +137,10 @@
       }
 
       existingRecords = updatedRecords;
-      updateOverwriteWarning();
+      // 登録直後は「今まさに登録した月」がexistingRecordsに含まれるため、
+      // ここでupdateOverwriteWarning()を呼ぶと自分自身と一致して警告が出てしまう。
+      // 登録成功直後は単純に警告を隠す（次に年月を変更したときに改めて判定される）。
+      overwriteWarning.hidden = true;
     } catch (error) {
       console.error("登録に失敗しました:", error);
       showError(
@@ -132,7 +153,7 @@
   }
 
   yearMonthInput.value = currentYearMonth();
-  yearMonthInput.addEventListener("change", updateOverwriteWarning);
+  yearMonthInput.addEventListener("change", syncFormWithExistingRecord);
   form.addEventListener("submit", handleSubmit);
 
   loadExistingRecords();

@@ -258,9 +258,35 @@
     }
   }
 
+  /** OCR結果表示直後に呼ぶ。警告表示のみ切り替え、OCRが読み取った値は上書きしない */
   function updateOverwriteWarning() {
     const exists = existingRecords.some((r) => r.yearMonth === yearMonthInput.value);
     overwriteWarning.hidden = !exists;
+    overwriteWarning.textContent = "同じ年月のデータが既に登録されています。登録すると上書きされます。";
+  }
+
+  /**
+   * ユーザーが確認画面で年月を手動変更したときに呼ぶ。
+   * その年月に既存データがあれば、請求額・使用量・備考へ読み込んで表示する
+   * （OCRが誤って別の月として読み取った場合の手直しにも使える）。
+   * 既存データが無ければ入力欄を空に戻す。
+   */
+  function syncFormWithExistingRecord() {
+    const existing = existingRecords.find((r) => r.yearMonth === yearMonthInput.value);
+
+    overwriteWarning.hidden = !existing;
+
+    if (existing) {
+      overwriteWarning.textContent =
+        "この年月は既に登録されています。現在の登録内容を表示しています。登録すると上書きされます。";
+      amountInput.value = existing.amount;
+      usageInput.value = existing.usage === null || existing.usage === undefined ? "" : existing.usage;
+      memoInput.value = existing.memo || "";
+    } else {
+      amountInput.value = "";
+      usageInput.value = "";
+      memoInput.value = "";
+    }
   }
 
   /**
@@ -298,7 +324,7 @@
     stepUpload.hidden = false;
   });
 
-  yearMonthInput.addEventListener("change", updateOverwriteWarning);
+  yearMonthInput.addEventListener("change", syncFormWithExistingRecord);
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -338,7 +364,8 @@
         ? "（確認用）入力内容は正しく処理されました。実際のGitHubへの保存はステップ14で有効になります。"
         : "登録しました。";
       existingRecords = updatedRecords;
-      updateOverwriteWarning();
+      // 登録直後は自分自身と一致して警告が出てしまうため、単純に隠す
+      overwriteWarning.hidden = true;
     } catch (error) {
       console.error("登録に失敗しました:", error);
       formError.textContent = `登録に失敗しました: ${error.message || "原因不明のエラーです。"}`;
