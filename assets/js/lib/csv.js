@@ -197,7 +197,11 @@ window.CSVLib = (function () {
    * @returns {Promise<Array<Object>>}
    */
   async function fetchRecords(path) {
-    const response = await fetch(path, { cache: "no-store" });
+    // no-store指定はブラウザのキャッシュには効くが、GitHub Pages側のCDNキャッシュ
+    // まではバイパスできないことがある。URLにタイムスタンプを付与し、CDNにとって
+    // 「毎回別のURL」として扱わせることで、コミット直後でも最新の内容を取得しやすくする。
+    const cacheBustedUrl = `${path}?t=${Date.now()}`;
+    const response = await fetch(cacheBustedUrl, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`CSVの取得に失敗しました（${path}, status: ${response.status}）`);
     }

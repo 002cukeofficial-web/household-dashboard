@@ -85,6 +85,7 @@ window.GitHubAPI = (function () {
   async function fetchCurrentSha(path, token) {
     const response = await fetch(`${apiUrl(path)}?ref=${window.AppConfig.GITHUB_BRANCH}`, {
       headers: authHeaders(token),
+      cache: "no-store", // ブラウザキャッシュ経由で古いshaを掴んでしまい、409の原因になるため必須
     });
 
     if (response.status === 404) return null; // 新規ファイル
