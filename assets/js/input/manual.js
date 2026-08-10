@@ -36,7 +36,8 @@
   const submitStatus = document.getElementById("submit-status");
 
   let category = null; // categories.json から見つかったカテゴリ情報
-  let csvPath = "";
+  let csvLocalPath = ""; // fetch()での読み込み用（このページから見た相対パス）
+  let csvRepoPath = ""; // GitHub Contents API用（リポジトリルートから見たパス）
   let existingRecords = [];
 
   function currentYearMonth() {
@@ -70,8 +71,11 @@
       return;
     }
 
-    // register/ 配下のページなので、categories.json に書かれたルート相対パスへ「../」を付与する
-    csvPath = `../${category.csv}`;
+    // categories.json の csv はリポジトリルートから見た相対パス（例: "data/gas.csv"）。
+    // fetch()での読み込みには「../」を付けたページ相対パスが必要で、
+    // GitHub Contents APIへの書き込みにはルート相対パスのまま渡す必要がある。
+    csvLocalPath = `../${category.csv}`;
+    csvRepoPath = category.csv;
 
     // --- 画面の見出し・ラベルをカテゴリに合わせて差し替える ---
     pageTitle.textContent = `${category.label}登録 | わが家の光熱費ダッシュボード`;
@@ -89,7 +93,7 @@
     form.hidden = false;
 
     try {
-      existingRecords = await window.CSVLib.fetchRecords(csvPath);
+      existingRecords = await window.CSVLib.fetchRecords(csvLocalPath);
     } catch (error) {
       console.warn("既存データの取得に失敗しました（初回登録の場合は正常です）:", error);
       existingRecords = [];
@@ -142,7 +146,7 @@
     submitStatus.textContent = "登録処理中...";
 
     try {
-      const result = await window.GitHubAPI.commitCSV(csvPath, csvText, commitMessage);
+      const result = await window.GitHubAPI.commitCSV(csvRepoPath, csvText, commitMessage);
       submitStatus.textContent = result.stub
         ? "（確認用）入力内容は正しく処理されました。"
         : "登録しました。";

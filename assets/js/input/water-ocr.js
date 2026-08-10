@@ -14,7 +14,8 @@
  * ------------------------------------------------------------------- */
 
 (function () {
-  const CSV_PATH = "../data/water.csv";
+  const CSV_LOCAL_PATH = "../data/water.csv"; // fetch()での読み込み用（このページから見た相対パス）
+  const CSV_REPO_PATH = "data/water.csv"; // GitHub Contents API用（リポジトリルートから見たパス）
   const MAX_IMAGE_DIMENSION = 1600; // 長辺の最大ピクセル数（これ以上は縮小する）
   const JPEG_QUALITY = 0.82;
 
@@ -250,7 +251,7 @@
 
   async function loadExistingRecords() {
     try {
-      existingRecords = await window.CSVLib.fetchRecords(CSV_PATH);
+      existingRecords = await window.CSVLib.fetchRecords(CSV_LOCAL_PATH);
     } catch (error) {
       console.warn("既存データの取得に失敗しました（初回登録の場合は正常です）:", error);
       existingRecords = [];
@@ -332,7 +333,7 @@
     submitStatus.textContent = "登録処理中...";
 
     try {
-      const result = await window.GitHubAPI.commitCSV(CSV_PATH, csvText, commitMessage);
+      const result = await window.GitHubAPI.commitCSV(CSV_REPO_PATH, csvText, commitMessage);
       submitStatus.textContent = result.stub
         ? "（確認用）入力内容は正しく処理されました。実際のGitHubへの保存はステップ14で有効になります。"
         : "登録しました。";

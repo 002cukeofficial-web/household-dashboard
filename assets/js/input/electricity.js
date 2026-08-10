@@ -70,7 +70,7 @@
 
   async function loadExistingRecords() {
     try {
-      existingRecords = await window.CSVLib.fetchRecords(CSV_PATH);
+      existingRecords = await window.CSVLib.fetchRecords(CSV_LOCAL_PATH);
     } catch (error) {
       // 初回登録などでCSVがまだ存在しない場合もあり得るため、
       // ここでは致命的エラーにはせず、空配列として続行する
@@ -108,7 +108,7 @@
     submitStatus.textContent = "登録処理中...";
 
     try {
-      const result = await window.GitHubAPI.commitCSV(CSV_PATH, csvText, commitMessage);
+      const result = await window.GitHubAPI.commitCSV(CSV_REPO_PATH, csvText, commitMessage);
 
       if (result.stub) {
         // ステップ14でGitHub連携が実装されるまでの暫定表示
