@@ -156,7 +156,12 @@
     try {
       const response = await fetch(window.AppConfig.OCR_ENDPOINT_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        // Content-Type: application/json だとブラウザがCORSプリフライト(OPTIONS)を
+        // 自動送信するが、Apps ScriptのウェブアプリはOPTIONSに対応していないため
+        // 失敗する（"Failed to fetch"の原因）。text/plainならプリフライトが
+        // 発生しない「単純なリクエスト」として扱われるため、これを使う。
+        // 中身は今まで通りJSON文字列のままで、Code.gs側もそのままJSON.parseできる。
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({
           image: processedImageBase64,
           mimeType: "image/jpeg",
