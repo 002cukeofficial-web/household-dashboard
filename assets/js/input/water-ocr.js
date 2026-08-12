@@ -47,122 +47,49 @@
   let existingRecords = [];
 
   // ===========================================================
-  // 画像のEXIF向き補正 + 圧縮
+  // 画像の圧縮
   // ===========================================================
+  // 【向き（回転）補正について】
+  // 以前はEXIFのOrientation情報を自前で解析して回転補正するコードを
+  // ここに書いていましたが、現在の主要ブラウザ（Chrome・Safari・Firefox）は
+  // 画像を読み込む時点でEXIFの向きを自動的に反映してくれるため、
+  // 自前の補正コードを実行すると「補正が二重にかかってしまい、
+  // かえって向きがおかしくなる」不具合が起きていました。
+  // そのため、向き補正はブラウザに任せ、ここでは縮小のみを行います。
 
   /**
-   * JPEGのバイナリからEXIFのOrientation値を読み取ります。
-   * 情報が無い・JPEGでない場合は 1（補正不要）を返します。
-   * ライブラリを追加せず、必要最小限のタグだけを自前で読み取る実装です。
-   *
-   * @param {ArrayBuffer} arrayBuffer
-   * @returns {number} 1〜8のOrientation値
-   */
-  function readExifOrientation(arrayBuffer) {
-    const view = new DataView(arrayBuffer);
-    if (view.byteLength < 4 || view.getUint16(0) !== 0xffd8) return 1; // JPEGでない
-
-    let offset = 2;
-    while (offset < view.byteLength) {
-      const marker = view.getUint16(offset);
-      offset += 2;
-      if (marker === 0xffe1) {
-        // APP1（Exif）セグメント
-        const exifStart = offset + 2;
-        if (view.getUint32(exifStart + 0) !== 0x45786966) return 1; // "Exif" ではない
-
-        const tiffOffset = exifStart + 6;
-        const little = view.getUint16(tiffOffset) === 0x4949; // "II" ならリトルエンディアン
-        const firstIfdOffset = view.getUint32(tiffOffset + 4, little);
-        const entriesOffset = tiffOffset + firstIfdOffset;
-        const entryCount = view.getUint16(entriesOffset, little);
-
-        for (let i = 0; i < entryCount; i++) {
-          const entryOffset = entriesOffset + 2 + i * 12;
-          const tag = view.getUint16(entryOffset, little);
-          if (tag === 0x0112) {
-            // Orientationタグ
-            return view.getUint16(entryOffset + 8, little);
-          }
-        }
-        return 1;
-      } else if ((marker & 0xff00) !== 0xff00) {
-        break; // JPEGのマーカーでなくなったら終了
-      } else {
-        offset += view.getUint16(offset);
-      }
-    }
-    return 1;
-  }
-
-  /**
-   * Orientation値に応じて、canvasへの描画時の回転・反転を適用します。
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {number} orientation
-   * @param {number} width
-   * @param {number} height
-   */
-  function applyOrientationTransform(ctx, orientation, width, height) {
-    switch (orientation) {
-      case 2: ctx.transform(-1, 0, 0, 1, width, 0); break;
-      case 3: ctx.transform(-1, 0, 0, -1, width, height); break;
-      case 4: ctx.transform(1, 0, 0, -1, 0, height); break;
-      case 5: ctx.transform(0, 1, 1, 0, 0, 0); break;
-      case 6: ctx.transform(0, 1, -1, 0, height, 0); break;
-      case 7: ctx.transform(0, -1, -1, 0, height, width); break;
-      case 8: ctx.transform(0, -1, 1, 0, 0, width); break;
-      default: break; // 1: 補正不要
-    }
-  }
-
-  /**
-   * 画像ファイルを読み込み、EXIFの向きを補正しつつ、長辺が
-   * MAX_IMAGE_DIMENSION を超えないように縮小したJPEGのdata URLを返します。
+   * 画像ファイルを読み込み、長辺が MAX_IMAGE_DIMENSION を超えないように
+   * 縮小したJPEGのdata URLを返します。向き補正はブラウザに任せています。
    *
    * @param {File} file
    * @returns {Promise<string>} "data:image/jpeg;base64,...." 形式の文字列
    */
   function processImageFile(file) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
-      reader.onload = () => {
-        const arrayBuffer = reader.result;
-        const orientation = readExifOrientation(arrayBuffer);
-
-        const blobUrl = URL.createObjectURL(new Blob([arrayBuffer]));
-        const img = new Image();
-        img.onerror = () => reject(new Error("画像の読み込みに失敗しました"));
-        img.onload = () => {
-          URL.revokeObjectURL(blobUrl);
-
-          // 90度・270度回転の場合は縦横を入れ替える
-          const swapDimensions = orientation >= 5 && orientation <= 8;
-          const naturalWidth = swapDimensions ? img.height : img.width;
-          const naturalHeight = swapDimensions ? img.width : img.height;
-
-          const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(naturalWidth, naturalHeight));
-          const outputWidth = Math.round(naturalWidth * scale);
-          const outputHeight = Math.round(naturalHeight * scale);
-
-          const canvas = document.createElement("canvas");
-          canvas.width = outputWidth;
-          canvas.height = outputHeight;
-          const ctx = canvas.getContext("2d");
-
-          ctx.save();
-          // 補正の回転はスケール前の実寸に対して行い、その後まとめて縮小して描画する
-          const drawScale = scale;
-          ctx.scale(drawScale, drawScale);
-          applyOrientationTransform(ctx, orientation, img.width, img.height);
-          ctx.drawImage(img, 0, 0);
-          ctx.restore();
-
-          resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
-        };
-        img.src = blobUrl;
+      const blobUrl = URL.createObjectURL(file);
+      const img = new Image();
+      img.onerror = () => {
+        URL.revokeObjectURL(blobUrl);
+        reject(new Error("画像の読み込みに失敗しました"));
       };
-      reader.readAsArrayBuffer(file);
+      img.onload = () => {
+        URL.revokeObjectURL(blobUrl);
+
+        // img.width / img.height は、ブラウザが既にEXIFの向きを反映した後の
+        // 見た目通りの寸法になっている
+        const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(img.width, img.height));
+        const outputWidth = Math.round(img.width * scale);
+        const outputHeight = Math.round(img.height * scale);
+
+        const canvas = document.createElement("canvas");
+        canvas.width = outputWidth;
+        canvas.height = outputHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, outputWidth, outputHeight);
+
+        resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
+      };
+      img.src = blobUrl;
     });
   }
 
