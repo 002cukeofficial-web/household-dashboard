@@ -176,8 +176,7 @@
       showConfirmStep(result.extracted);
     } catch (error) {
       console.error("OCRに失敗しました:", error);
-      uploadError.textContent =
-        "OCRの読み取りに失敗しました。電波状況をご確認のうえ、再度お試しいただくか、手入力に切り替えてください。";
+      uploadError.textContent = `OCRの読み取りに失敗しました: ${error.message || "原因不明のエラーです。"}`;
       uploadError.hidden = false;
       ocrStatus.textContent = "";
       runOcrButton.disabled = false;
