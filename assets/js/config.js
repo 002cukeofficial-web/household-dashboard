@@ -17,7 +17,7 @@ window.AppConfig = {
   // 誰でも閲覧できます。つまりこの「合言葉」も事実上公開されており、
   // 「誰でも簡単に叩けないようにする程度」の抑止効果しかありません。
   // 本格的な認証にはなりませんが、無料の静的サイト構成での現実的な落としどころとして採用しています。
-  OCR_SHARED_SECRET: "change-this-to-your-own-secret",
+  OCR_SHARED_SECRET: "kounetsuhi_dashboard_2026",
 
   // --- GitHubリポジトリ情報 ---
   // TODO: 実際に使うリポジトリのオーナー名・リポジトリ名に書き換えてください
