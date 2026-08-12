@@ -11,7 +11,7 @@
 window.AppConfig = {
   // --- 水道代OCR機能（Google Apps Script）関連 ---
   // TODO: Apps Scriptをウェブアプリとしてデプロイした後のURLに置き換えてください
-  OCR_ENDPOINT_URL: "https://script.google.com/macros/s/XXXXXXXXXXXXXXXX/exec",
+  OCR_ENDPOINT_URL: "https://script.google.com/macros/s/AKfycbxu-6tcwfctv8R2Hbba8XqArpwA6u73hFMq752ex_Qcr1vA6Mi38oi6HALaajg1RW8k/exec",
   // TODO: apps-script/Code.gs 側のスクリプトプロパティ SHARED_SECRET と同じ値にしてください。
   // 注意: このサイトは公開リポジトリで運用しているため、このJSファイルの中身も
   // 誰でも閲覧できます。つまりこの「合言葉」も事実上公開されており、
