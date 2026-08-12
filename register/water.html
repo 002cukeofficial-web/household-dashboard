@@ -28,8 +28,13 @@
       <p class="page-description">水道代の領収書を撮影するか、画像を選択してください。</p>
 
       <div class="form-group">
-        <label for="receipt-image">領収書の画像</label>
-        <input type="file" id="receipt-image" name="receiptImage" accept="image/*" capture="environment" />
+        <label for="receipt-image-camera">カメラで撮影する</label>
+        <input type="file" id="receipt-image-camera" name="receiptImageCamera" accept="image/*" capture="environment" />
+      </div>
+
+      <div class="form-group">
+        <label for="receipt-image-gallery">アルバムから選択する</label>
+        <input type="file" id="receipt-image-gallery" name="receiptImageGallery" accept="image/*" />
       </div>
 
       <img id="receipt-preview" class="receipt-preview" alt="選択した領収書のプレビュー" hidden />
