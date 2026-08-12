@@ -21,7 +21,8 @@
 
   // --- STEP A: アップロード ---
   const stepUpload = document.getElementById("step-upload");
-  const receiptImageInput = document.getElementById("receipt-image");
+  const receiptImageCameraInput = document.getElementById("receipt-image-camera");
+  const receiptImageGalleryInput = document.getElementById("receipt-image-gallery");
   const receiptPreview = document.getElementById("receipt-preview");
   const uploadError = document.getElementById("upload-error");
   const runOcrButton = document.getElementById("run-ocr-button");
@@ -97,13 +98,22 @@
   // STEP A: 画像選択・OCR実行
   // ===========================================================
 
-  receiptImageInput.addEventListener("change", async () => {
+  /**
+   * 選ばれた画像ファイルを処理する共通処理。
+   * カメラ撮影・アルバム選択のどちらの入力欄からも呼ばれる。
+   * @param {File|undefined} file
+   * @param {HTMLInputElement} otherInput もう片方の入力欄（選択状態をクリアするため）
+   */
+  async function handleImageFileSelected(file, otherInput) {
     uploadError.hidden = true;
     runOcrButton.disabled = true;
     processedImageBase64 = null;
 
-    const file = receiptImageInput.files[0];
     if (!file) return;
+
+    // カメラ・アルバムどちらか一方だけを「選択中」の状態にする
+    // （両方に値が残っていると、どちらの画像を使うのか分かりにくくなるため）
+    otherInput.value = "";
 
     if (!file.type.startsWith("image/")) {
       uploadError.textContent = "画像ファイルを選択してください。";
@@ -126,6 +136,14 @@
       uploadError.hidden = false;
       ocrStatus.textContent = "";
     }
+  }
+
+  receiptImageCameraInput.addEventListener("change", () => {
+    handleImageFileSelected(receiptImageCameraInput.files[0], receiptImageGalleryInput);
+  });
+
+  receiptImageGalleryInput.addEventListener("change", () => {
+    handleImageFileSelected(receiptImageGalleryInput.files[0], receiptImageCameraInput);
   });
 
   runOcrButton.addEventListener("click", async () => {
